@@ -35,8 +35,10 @@ extern struct medic   medPending[MAX_MED];
 extern int     i_medPending ;
 extern bool bSendMQTT ;
 extern char cPayload[128];
-
-
+extern bool bSendMQTTMedicationEmpty ;
+extern char cPayloadMedicationEmpty[128];
+void deleteFromMed(int  idToDelete);
+void stopLedNotification();
 
 void cs_task(void *arg); 
 void speakMe(char *szFile);

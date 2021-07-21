@@ -41,7 +41,9 @@
 #include "curamSenes.h"
 
 bool bSendMQTT = false;
+bool bSendMQTTMedicationEmpty = false;
 char cPayload[128];
+char cPayloadMedicationEmpty[128];
 
 /* The time between each MQTT message publish in milliseconds */
 #define PUBLISH_INTERVAL_MS 6000
@@ -118,28 +120,37 @@ void disconnect_callback_handler(AWS_IoT_Client *pClient, void *data) {
 
 
 
-static void publisher(AWS_IoT_Client *client, char *base_topic){
+
+static void publish(AWS_IoT_Client *client, char *base_topic,char *cLoad){
 
     IoT_Publish_Message_Params paramsQOS1;
 
     
     paramsQOS1.qos = QOS1;
-    paramsQOS1.payload = (void *) cPayload;
+    paramsQOS1.payload = (void *) cLoad;
     paramsQOS1.isRetained = 0;
-    paramsQOS1.payloadLen = strlen(cPayload);
+    paramsQOS1.payloadLen = strlen(cLoad);
     IoT_Error_t rc = aws_iot_mqtt_publish(client, base_topic, strlen(base_topic), &paramsQOS1);
     if (rc == MQTT_REQUEST_TIMEOUT_ERROR) {
         ESP_LOGW(TAG, "QOS1 publish ack not received.");
         rc = SUCCESS;
     }
+    
+}
+
+
+static void publishAck(AWS_IoT_Client *client, char *base_topic){
+    publish(client, base_topic,cPayload);
     bSendMQTT=false;
 }
 
 
 
 
-
-
+static void publishEmpty(AWS_IoT_Client *client, char *base_topic){
+    publish(client, base_topic,cPayloadMedicationEmpty);
+    bSendMQTTMedicationEmpty=false;
+}
 
 
 
@@ -253,9 +264,12 @@ void aws_iot_task(void *param) {
         // ui_textarea_add("No Message\n", "N", 0);
         if(bSendMQTT){
             sprintf(base_publish_topic,  "%s/rtn", client_id);
-            publisher(&client, base_publish_topic);
+            publishAck(&client, base_publish_topic);
         }
-
+        if(bSendMQTTMedicationEmpty){
+            sprintf(base_publish_topic,  "%s/rtn", client_id);
+            publishEmpty(&client, base_publish_topic);
+        }
     }
 
     ESP_LOGE(TAG, "An error occurred in the main loop.");

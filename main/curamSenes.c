@@ -38,7 +38,15 @@ QueueHandle_t qCSQueue;
 struct medic   medPending[MAX_MED];
 int     i_medPending =0;
 
+
+
+
 void csNewMedication(char *szBuffer){
+    if (i_medPending == (MAX_MED-1) ){
+        ESP_LOGW(TAG, "Max num medicine, skipping.");
+        return;
+    }
+
     ESP_LOGI(TAG, "%s", (char*)szBuffer );
     jparse_ctx_t myCTX;
 
@@ -78,18 +86,48 @@ void csNewMedication(char *szBuffer){
     releaseMedText();
     
     sprintf(cPayload,"{\"id_dsm\":%d,\"status\":0}",medPending[i_medPending-1].id_dsm);
-    ESP_LOGI(TAG, "%s", cPayload );
+    ESP_LOGI(TAG, "Return ACK: %s", cPayload );
     bSendMQTT=true;
 }
 
 
-void csMedicationClear(){
-    i_medPending=0;
+void stopLedNotification(){
     vTaskSuspend(xBlink);
     Core2ForAWS_Sk6812_Clear();
     Core2ForAWS_Sk6812_Show();
+}
+
+
+void csMedicationClear(){
+    char szTmpVID[5*MAX_MED];  
+    char szTmpID[6];
+    
+    stopLedNotification();
+    strcpy(szTmpVID,"");
+    for(int j=0;j<i_medPending;j++){
+        sprintf(szTmpID,"%d",medPending[j].id_dsm);
+        strcat(szTmpVID,szTmpID);
+        if(j<i_medPending-1)
+            strcat(szTmpVID,",");
+    }
+
+    sprintf(cPayloadMedicationEmpty,"{\"id_dsm\":[%s],\"status\":1}",szTmpVID);
+    ESP_LOGI(TAG, "Empty medication: %s", cPayloadMedicationEmpty );
+    i_medPending=0;
+    bSendMQTTMedicationEmpty=true;
     releaseMedText();
 }
+
+
+void deleteFromMed(int  idToDelete){
+    for(int j=idToDelete;j<i_medPending-1;j++){
+        strcpy (medPending[j].m_name    , medPending[j+1].m_name );
+                medPending[j].id_dsm    = medPending[j+1].id_dsm;
+                medPending[j].timestamp = medPending[j+1].timestamp;
+    }
+    i_medPending--;
+}
+
 
 
 void cs_task(void *arg) {  

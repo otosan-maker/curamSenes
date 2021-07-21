@@ -140,7 +140,7 @@ void ui_init() {
     lv_label_set_recolor(mqtt_label, true);
 
     out_txtarea = lv_textarea_create(lv_scr_act(), NULL);
-    lv_obj_set_size(out_txtarea, 300, 180);
+    lv_obj_set_size(out_txtarea, 300, 190);
     lv_obj_align(out_txtarea, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -12);
     lv_textarea_set_max_length(out_txtarea, MAX_TEXTAREA_LENGTH);
     lv_textarea_set_text_sel(out_txtarea, false);
@@ -164,15 +164,23 @@ void ui_task(void *arg) {
 
         if (i_medPending == 0){
             ui_textarea_add("         No News\n", "N", 0);
+            stopLedNotification();
         }else{
             char sztmp[1024];
             strcpy(sztmp,"         MEDICATION PENDING\n\n");
             for(int i=0;i<i_medPending;i++){
+                //delete the medication that is 3 times past du 
+                if ((mTime  - medPending[i].timestamp) > PAST_DUE_TIME * 3 ){
+                    deleteFromMed(i);
+                    continue;
+                }
+                    
                 //ESP_LOGI(TAG, " %u Medic %s ",i,medPending[i].m_name);
                 strcat(sztmp," * ");
                 strcat(sztmp,medPending[i].m_name);
+                //mark past DUE 
                 if ((mTime  - medPending[i].timestamp) > PAST_DUE_TIME)
-                    strcat(sztmp," PAST DUE ");
+                    strcat(sztmp,"   .....  PAST DUE ");
                 strcat(sztmp,"\n");
             }
             ui_textarea_add( sztmp , NULL, 0);
