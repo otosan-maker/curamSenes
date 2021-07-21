@@ -117,25 +117,26 @@ void disconnect_callback_handler(AWS_IoT_Client *pClient, void *data) {
 
 
 
-void sendMQTT(  ){
-    char base_topic[20];
-    strncpy(base_topic,"curemSenesBus/1",20);
-    uint16_t base_topic_len = strlen(base_topic);
+
+static void publisher(AWS_IoT_Client *client, char *base_topic){
+
     IoT_Publish_Message_Params paramsQOS1;
 
- 
+    
     paramsQOS1.qos = QOS1;
     paramsQOS1.payload = (void *) cPayload;
     paramsQOS1.isRetained = 0;
     paramsQOS1.payloadLen = strlen(cPayload);
-    IoT_Error_t rc = aws_iot_mqtt_publish(&client, base_topic, base_topic_len, &paramsQOS1);
+    IoT_Error_t rc = aws_iot_mqtt_publish(client, base_topic, strlen(base_topic), &paramsQOS1);
     if (rc == MQTT_REQUEST_TIMEOUT_ERROR) {
         ESP_LOGW(TAG, "QOS1 publish ack not received.");
         rc = SUCCESS;
     }
     bSendMQTT=false;
-    ESP_LOGW(TAG, "sendMQTT rc=%d",rc);
 }
+
+
+
 
 
 
@@ -171,7 +172,7 @@ void aws_iot_task(void *param) {
     }
 
     char subscribe_topic[SUBSCRIBE_TOPIC_LEN];
-    char base_publish_topic[BASE_PUBLISH_TOPIC_LEN];
+    char base_publish_topic[BASE_PUBLISH_TOPIC_LEN+12];
     snprintf(subscribe_topic, SUBSCRIBE_TOPIC_LEN, "%s/#", client_id);
     snprintf(base_publish_topic, BASE_PUBLISH_TOPIC_LEN, "%s/", client_id);
 
@@ -250,8 +251,10 @@ void aws_iot_task(void *param) {
         
         //publisher(&client, base_publish_topic, BASE_PUBLISH_TOPIC_LEN);
         // ui_textarea_add("No Message\n", "N", 0);
-        if(bSendMQTT)
-            sendMQTT( );
+        if(bSendMQTT){
+            sprintf(base_publish_topic,  "%s/rtn", client_id);
+            publisher(&client, base_publish_topic);
+        }
 
     }
 

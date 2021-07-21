@@ -39,6 +39,5 @@
 #include "core2forAWS.h"
 
 void aws_iot_task(void *param);
-void sendMQTT(  );
 void disconnect_callback_handler(AWS_IoT_Client *pClient, void *data);
 void iot_subscribe_callback_handler(AWS_IoT_Client *pClient, char *topicName, uint16_t topicNameLen, IoT_Publish_Message_Params *params, void *pData);
