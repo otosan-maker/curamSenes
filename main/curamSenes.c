@@ -89,7 +89,7 @@ void csNewMedication(char *szBuffer){
     sprintf(cPayload,"{\"id_dsm\":[%d],\"status\":0}",medPending[i_medPending-1].id_dsm);
     ESP_LOGI(TAG, "Return ACK: %s", cPayload );
     bSendMQTT=true;
-    xQueueSend( qSoundQueue, ( void * ) &"/speech/aud001a.wav", ( TickType_t ) 1000 );
+    xQueueSend( qSoundQueue, ( void * ) &"/speech/aud001.wav", ( TickType_t ) 1000 );
 }
 
 
@@ -143,6 +143,7 @@ void cs_task(void *arg) {
             //ESP_LOGI(TAG, "%d timeout :%u, %u,%u",i,medPending[i].timestamp,mTime, (mTime - medPending[i].timestamp ));
             if ((mTime - medPending[i].timestamp) > PAST_DUE_TIME ){
                 iBotLedColor = 0xff0000;
+                xQueueSend( qSoundQueue, ( void * ) &"/speech/aud002.wav", ( TickType_t ) 1000 );
             }
         }
 

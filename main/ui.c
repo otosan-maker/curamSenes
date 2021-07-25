@@ -155,38 +155,39 @@ void ui_init() {
 void ui_task(void *arg) {
     
     ui_init();
-    
+    int lasNumMed=0;
 
 
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(1000));
         TickType_t  mTime = xTaskGetTickCount();
-
-        if (i_medPending == 0){
-            ui_textarea_add("         No News\n", "N", 0);
-            stopLedNotification();
-        }else{
-            char sztmp[1024];
-            strcpy(sztmp,"         MEDICATION PENDING\n\n");
-            for(int i=0;i<i_medPending;i++){
-                //delete the medication that is 3 times past du 
-                if ((mTime  - medPending[i].timestamp) > PAST_DUE_TIME * 3 ){
-                    deleteFromMed(i);
-                    continue;
+        if(lasNumMed!=i_medPending){
+            if (i_medPending == 0){
+                ui_textarea_add("         No News\n", "N", 0);
+                stopLedNotification();
+            }else{
+                char sztmp[1024];
+                strcpy(sztmp,"         MEDICATION PENDING\n\n");
+                for(int i=0;i<i_medPending;i++){
+                    //delete the medication that is 3 times past du 
+                    if ((mTime  - medPending[i].timestamp) > PAST_DUE_TIME * 3 ){
+                        deleteFromMed(i);
+                        continue;
+                    }
+                    //ESP_LOGI(TAG, " %u Medic %s ",i,medPending[i].m_name);
+                    strcat(sztmp," * ");
+                    strcat(sztmp,medPending[i].m_name);
+                    //mark past DUE 
+                    if ((mTime  - medPending[i].timestamp) > PAST_DUE_TIME){
+                        strcat(sztmp,"   .....  PAST DUE ");
+                    }
+                    strcat(sztmp,"\n");
                 }
-                    
-                //ESP_LOGI(TAG, " %u Medic %s ",i,medPending[i].m_name);
-                strcat(sztmp," * ");
-                strcat(sztmp,medPending[i].m_name);
-                //mark past DUE 
-                if ((mTime  - medPending[i].timestamp) > PAST_DUE_TIME)
-                    strcat(sztmp,"   .....  PAST DUE ");
-                strcat(sztmp,"\n");
+                ui_textarea_add( sztmp , NULL, 0);
             }
-            ui_textarea_add( sztmp , NULL, 0);
+            lasNumMed=i_medPending;
         }
 
-        
     }
     // Should never get here. FreeRTOS tasks loop forever.
     ESP_LOGE(TAG, "Error in UI task. Out of loop.");

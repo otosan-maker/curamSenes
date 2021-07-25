@@ -28,7 +28,7 @@ struct medic {
 };
 
 #define MAX_MED 10
-#define PAST_DUE_TIME 600*100 //10 minutes
+#define PAST_DUE_TIME 1000 //600*100 //10 minutes
 
 extern QueueHandle_t qCSQueue;
 extern struct medic   medPending[MAX_MED];

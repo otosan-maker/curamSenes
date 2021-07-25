@@ -13,7 +13,7 @@ void Speaker_Init() {
     esp_err_t err = ESP_OK;
     i2s_config_t i2s_config = {
         .mode = (i2s_mode_t)(I2S_MODE_MASTER),
-        .sample_rate = 44100,
+        .sample_rate = 24000,
         .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT, // is fixed at 12bit, stereo, MSB
         .channel_format = I2S_CHANNEL_FMT_ONLY_RIGHT,
 #if ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(4, 1, 0)
@@ -37,7 +37,7 @@ void Speaker_Init() {
     tx_pin_config.data_out_num = I2S_DATA_PIN;
     tx_pin_config.data_in_num = I2S_DATA_IN_PIN;
     err += i2s_set_pin(SPEAKER_I2S_NUMBER, &tx_pin_config);
-    err += i2s_set_clk(SPEAKER_I2S_NUMBER, 44100, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
+    err += i2s_set_clk(SPEAKER_I2S_NUMBER, 24000, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
 }
 
 void Speaker_WriteBuff(uint8_t* buff, uint32_t len, uint32_t timeout) {
