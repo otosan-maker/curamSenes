@@ -56,6 +56,8 @@
 TaskHandle_t csHandle;
 TaskHandle_t uiHandle;
 extern TaskHandle_t xBlink;
+static const char *TAG = "CURAMSENES";
+
 
 void app_main()
 {
@@ -70,9 +72,11 @@ void app_main()
     initialise_wifi();
 
     qCSQueue = xQueueCreate( 5, 128 );
+    qSoundQueue = xQueueCreate( 5, 128 );
 
     xTaskCreatePinnedToCore(&aws_iot_task, "aws_iot_task", 4096 * 2, NULL, 2, NULL, 1);
     xTaskCreatePinnedToCore(&blink_task, "blink_task", 4096 * 1, NULL, 2, &xBlink, tskNO_AFFINITY);
     xTaskCreatePinnedToCore(&cs_task, "cs_task", 4096 * 1, NULL, 2, &csHandle, tskNO_AFFINITY);
     
+    xTaskCreatePinnedToCore(&speakMe_task, "speakMe_task", 41096 * 1, NULL, 2, NULL, 1);
 }
