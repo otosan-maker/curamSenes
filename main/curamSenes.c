@@ -35,6 +35,7 @@ extern TaskHandle_t xBlink;
 
 
 QueueHandle_t qCSQueue;
+
 struct medic   medPending[MAX_MED];
 int     i_medPending =0;
 
@@ -85,9 +86,10 @@ void csNewMedication(char *szBuffer){
     vTaskResume(xBlink);
     releaseMedText();
     
-    sprintf(cPayload,"{\"id_dsm\":%d,\"status\":0}",medPending[i_medPending-1].id_dsm);
+    sprintf(cPayload,"{\"id_dsm\":[%d],\"status\":0}",medPending[i_medPending-1].id_dsm);
     ESP_LOGI(TAG, "Return ACK: %s", cPayload );
     bSendMQTT=true;
+    //xQueueSend( qSoundQueue, ( void * ) &"/speech/aud001a.wav", ( TickType_t ) 1000 );
 }
 
 
