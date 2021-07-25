@@ -51,7 +51,7 @@ wav_header myHeader;
 #define MOUNT_POINT "/sdcard"
 static const char *TAG = "SPEAK";
 uint8_t* soundBuff;
-
+QueueHandle_t qSoundQueue;
 
 
 void writeWavHeader(wav_header myHeader){
@@ -81,8 +81,8 @@ esp_err_t readFile(char *file_path){
     
     sdmmc_card_t* card;
     esp_err_t err;
-        
-    xSemaphoreTake(spi_mutex, portMAX_DELAY);
+    
+    
     spi_poll();
  
     err = Core2ForAWS_SDcard_Mount(MOUNT_POINT, &card);
@@ -92,7 +92,6 @@ esp_err_t readFile(char *file_path){
     } 
     else{
         ESP_LOGI(TAG, "SD Card mount error code: %d", err);
-        xSemaphoreGive(spi_mutex);
         return 0;
     }
  
@@ -102,11 +101,10 @@ esp_err_t readFile(char *file_path){
     FILE* f = fopen(file_path, "r");
     if (f == NULL) {
         ESP_LOGE(TAG, "Failed to open file for reading");
-        xSemaphoreGive(spi_mutex);
         return 0;
     }
     size_t numBytes=fread(&myHeader,sizeof(wav_header),1,f);
-    writeWavHeader(myHeader);
+    //writeWavHeader(myHeader);
 
     int length  = myHeader.data_bytes;
     ESP_LOGI(TAG, " #############   ###  ## #  El fichero es de  %d bytes de longitud",length );
@@ -116,7 +114,6 @@ esp_err_t readFile(char *file_path){
         ESP_LOGI(TAG, "MALLOC ERROR");
         fclose(f);
         Core2ForAWS_SDcard_Unmount(MOUNT_POINT, card);
-        xSemaphoreGive(spi_mutex);
         return 0;
     }
 
@@ -128,42 +125,46 @@ esp_err_t readFile(char *file_path){
     //}
     
     fclose(f);
- 
+    spi_poll();
     err = Core2ForAWS_SDcard_Unmount(MOUNT_POINT, card);
-    xSemaphoreGive(spi_mutex);
- 
+    
     if(err == ESP_OK){
         ESP_LOGI(TAG, "Ejected the SDCard");
     } 
     else{
         ESP_LOGI(TAG, "SDCard eject error code: %d", err);
     }
+    spi_poll();
     return length;
 }
 
 
 
-
-void speakMe_task(void *arg){
-   
-
-    vTaskDelay(pdMS_TO_TICKS(200));
-    char file_path[] = MOUNT_POINT"/speech/aud001a.wav";
+void playSound(char *szFile){
+    char file_path[64];
+    sprintf(file_path,"%s%s", MOUNT_POINT, szFile);
+    xSemaphoreTake(spi_mutex, portMAX_DELAY);
     int sound_len = readFile(file_path);
-    
+    xSemaphoreGive(spi_mutex);
+ 
 
     Speaker_Init();
     Core2ForAWS_Speaker_Enable(1);
-    ESP_LOGI(TAG, "portMAX_DELAY: %d", portMAX_DELAY);
     Speaker_WriteBuff((uint8_t*)soundBuff, sound_len, 100);
     Core2ForAWS_Speaker_Enable(0);
     Speaker_Deinit();
     free(soundBuff);
     ESP_LOGI(TAG, "FINISHED");
-    vTaskDelay(pdMS_TO_TICKS(10000));
-    vTaskDelete(NULL);
+}
+
+
+void speakMe_task(void *arg){
+   char szBuff[64];
 
     while(true){
-        vTaskDelay(pdMS_TO_TICKS(1000));
+         if (xQueueReceive( qSoundQueue , &szBuff ,  pdMS_TO_TICKS( 1000 ) ) == pdPASS ){
+             ESP_LOGI(TAG, "New Sound.");
+             playSound("/speech/aud001a.wav");
+         }
     }
 }
