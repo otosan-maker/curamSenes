@@ -162,9 +162,10 @@ void speakMe_task(void *arg){
    char szBuff[64];
 
     while(true){
-         if (xQueueReceive( qSoundQueue , &szBuff ,  pdMS_TO_TICKS( 1000 ) ) == pdPASS ){
+        if (xQueueReceive( qSoundQueue , &szBuff ,  pdMS_TO_TICKS( 1000 ) ) == pdPASS ){
              ESP_LOGI(TAG, "New Sound.");
              playSound("/speech/aud001a.wav");
-         }
+        }
+        //vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

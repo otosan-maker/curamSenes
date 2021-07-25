@@ -78,5 +78,5 @@ void app_main()
     xTaskCreatePinnedToCore(&blink_task, "blink_task", 4096 * 1, NULL, 2, &xBlink, tskNO_AFFINITY);
     xTaskCreatePinnedToCore(&cs_task, "cs_task", 4096 * 1, NULL, 2, &csHandle, tskNO_AFFINITY);
     
-    xTaskCreatePinnedToCore(&speakMe_task, "speakMe_task", 41096 * 1, NULL, 2, NULL, 1);
+    xTaskCreatePinnedToCore(&speakMe_task, "speakMe_task", 4096 * 1, NULL, 2, NULL, 1);
 }

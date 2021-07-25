@@ -89,7 +89,7 @@ void csNewMedication(char *szBuffer){
     sprintf(cPayload,"{\"id_dsm\":[%d],\"status\":0}",medPending[i_medPending-1].id_dsm);
     ESP_LOGI(TAG, "Return ACK: %s", cPayload );
     bSendMQTT=true;
-    //xQueueSend( qSoundQueue, ( void * ) &"/speech/aud001a.wav", ( TickType_t ) 1000 );
+    xQueueSend( qSoundQueue, ( void * ) &"/speech/aud001a.wav", ( TickType_t ) 1000 );
 }
 
 
