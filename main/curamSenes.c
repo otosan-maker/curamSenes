@@ -31,7 +31,7 @@
 static const char *TAG = "cs";
 extern int iBotLedColor;
 extern TaskHandle_t xBlink;
-
+bool bAlertDueTime = false; 
 
 
 QueueHandle_t qCSQueue;
@@ -134,16 +134,31 @@ void deleteFromMed(int  idToDelete){
 
 void cs_task(void *arg) {  
     char szBuff[129];
+    TickType_t  mTimeLastWarn= xTaskGetTickCount();
 
     while (1) {
-        //red blink if any medication overpass timeout ... 10 sec
+        //red blink if any medication overpass PAST_DUE_TIME
         TickType_t  mTime = xTaskGetTickCount();
-
+        
         for (int i=0;i<i_medPending;i++){
+            //delete the medication that is 3 times past due
+            if ((mTime  - medPending[i].timestamp) > (PAST_DUE_TIME * 3 )){
+                ESP_LOGI(TAG, " %u Deleted medicine %s ",i,medPending[i].m_name);
+                deleteFromMed(i);
+                continue;
+            }
+            
             //ESP_LOGI(TAG, "%d timeout :%u, %u,%u",i,medPending[i].timestamp,mTime, (mTime - medPending[i].timestamp ));
             if ((mTime - medPending[i].timestamp) > PAST_DUE_TIME ){
                 iBotLedColor = 0xff0000;
+                bAlertDueTime=true;
+            }
+        }
+        if(bAlertDueTime){
+            if (mTime > (mTimeLastWarn+PAST_DUE_TIME)){
                 xQueueSend( qSoundQueue, ( void * ) &"/speech/aud002.wav", ( TickType_t ) 1000 );
+                mTimeLastWarn=mTime;
+                bAlertDueTime=false;
             }
         }
 

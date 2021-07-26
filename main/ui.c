@@ -42,7 +42,7 @@
 static lv_obj_t *out_txtarea;
 static lv_obj_t *wifi_label;
 static lv_obj_t *mqtt_label;
-
+extern bool bAlertDueTime; 
 
 static char *TAG = "UI";
 
@@ -155,7 +155,7 @@ void ui_init() {
 void ui_task(void *arg) {
     
     ui_init();
-    int lasNumMed=0;
+    int lasNumMed=-1;
 
 
     while (1) {
@@ -165,15 +165,12 @@ void ui_task(void *arg) {
             if (i_medPending == 0){
                 ui_textarea_add("         No News\n", "N", 0);
                 stopLedNotification();
+                bAlertDueTime = false;
             }else{
                 char sztmp[1024];
                 strcpy(sztmp,"         MEDICATION PENDING\n\n");
                 for(int i=0;i<i_medPending;i++){
-                    //delete the medication that is 3 times past du 
-                    if ((mTime  - medPending[i].timestamp) > PAST_DUE_TIME * 3 ){
-                        deleteFromMed(i);
-                        continue;
-                    }
+                    
                     //ESP_LOGI(TAG, " %u Medic %s ",i,medPending[i].m_name);
                     strcat(sztmp," * ");
                     strcat(sztmp,medPending[i].m_name);
