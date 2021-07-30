@@ -39,7 +39,14 @@ extern bool bSendMQTTMedicationEmpty ;
 extern char cPayloadMedicationEmpty[128];
 void deleteFromMed(int  idToDelete);
 void stopLedNotification();
-
-extern QueueHandle_t qSoundQueue;
 void cs_task(void *arg); 
+
+
+//Speech function
+extern QueueHandle_t qSoundQueue;
 void speakMe_task(void *arg);
+
+
+//bluetooth Scan Function
+extern QueueHandle_t qBlueScanQueue;
+void blueScan_task(void *arg);
