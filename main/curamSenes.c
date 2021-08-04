@@ -143,7 +143,7 @@ void cs_task(void *arg) {
         for (int i=0;i<i_medPending;i++){
             //delete the medication that is 3 times past due
             if ((mTime  - medPending[i].timestamp) > (PAST_DUE_TIME * 3 )){
-                ESP_LOGI(TAG, " %u Deleted medicine %s ",i,medPending[i].m_name);
+                //ESP_LOGI(TAG, " %u Deleted medicine %s ",i,medPending[i].m_name);
                 deleteFromMed(i);
                 continue;
             }
