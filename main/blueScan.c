@@ -36,6 +36,8 @@ QueueHandle_t qBlueScanQueue;
 
 void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
+	
+
 	switch (event)
 	{
 		case ESP_GAP_BLE_SCAN_PARAM_SET_COMPLETE_EVT:  
@@ -51,7 +53,17 @@ void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 			break;
 
 		case ESP_GAP_BLE_SCAN_RESULT_EVT: // Called when one scan result is ready 
-			ESP_LOGI(TAG, "Scan result event: %d", event);
+			//ESP_LOGI(TAG, "Scan result event: %d", event);
+			;
+			struct ble_scan_result_evt_param *mData ;
+			mData = (struct ble_scan_result_evt_param*) param;
+			
+
+			ESP_LOGI(TAG, "BT addr : %02x:%02x:%02x:%02x:%02x:%02x -- %d"
+				,mData->bda[0],mData->bda[1],mData->bda[2],mData->bda[3],mData->bda[4],mData->bda[5]
+				,mData->rssi
+				);
+			
 			break;
 
 		default:  ESP_LOGE(TAG, "Unhandled bt event: %d", event);
@@ -95,7 +107,7 @@ static void initialise_bt(void)
 
 
 void blueScan_task(void *arg){
-   	char szBuff[64];
+   	//char szBuff[64];
 	vTaskDelay(pdMS_TO_TICKS(20000));
     initialise_bt();
 
@@ -104,6 +116,6 @@ void blueScan_task(void *arg){
         //      ESP_LOGI(TAG, "scanning BT.");
         // }
         esp_ble_gap_start_scanning(10);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(20000));
     }
 }
