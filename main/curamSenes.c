@@ -166,11 +166,13 @@ void cs_task(void *arg) {
         if ( isPulsed()){
             csMedicationClear();
         }
+
         
-         if (xQueueReceive( qCSQueue , &szBuff ,  pdMS_TO_TICKS( 1000 ) ) == pdPASS ){
-             ESP_LOGI(TAG, "New Medication.");
-             csNewMedication(szBuff);
-         }
+        
+        if (xQueueReceive( qCSQueue , &szBuff ,  pdMS_TO_TICKS( 1000 ) ) == pdPASS ){
+            ESP_LOGI(TAG, "New Medication.");
+            csNewMedication(szBuff);
+        }
     }
     // Should never get here. FreeRTOS tasks loop forever.
     ESP_LOGE(TAG, "Error in CS task. Out of loop.");

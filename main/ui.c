@@ -42,6 +42,7 @@
 static lv_obj_t *out_txtarea;
 static lv_obj_t *wifi_label;
 static lv_obj_t *mqtt_label;
+static lv_obj_t *beacon_label;
 extern bool bAlertDueTime; 
 
 static char *TAG = "UI";
@@ -113,6 +114,19 @@ void ui_mqtt_label_update(bool state){
 }
 
 
+void ui_beacon_label_update(bool state){
+    xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
+    if (state == false) {
+        lv_label_set_text(beacon_label, "BT");
+    } 
+    else{
+        char buffer[25];
+        sprintf (buffer, "#0000ff %s #", "BT");
+        lv_label_set_text(beacon_label, buffer);
+    }
+    xSemaphoreGive(xGuiSemaphore);
+}
+
 
 bool isPulsed(){
     if (lv_obj_get_state(out_txtarea,0) == LV_STATE_FOCUSED)
@@ -139,6 +153,13 @@ void ui_init() {
     lv_label_set_text(mqtt_label, "____");
     lv_label_set_recolor(mqtt_label, true);
 
+    beacon_label= lv_label_create(lv_scr_act(), NULL);
+    //lv_obj_align(beacon_label,NULL,LV_ALIGN_IN_TOP_CENTER, 0, 6);
+    lv_obj_set_pos(beacon_label, 150, 5);	 
+    lv_label_set_text(beacon_label, "bt");
+    lv_label_set_recolor(beacon_label, true);
+
+
     out_txtarea = lv_textarea_create(lv_scr_act(), NULL);
     lv_obj_set_size(out_txtarea, 300, 190);
     lv_obj_align(out_txtarea, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -12);
@@ -163,7 +184,7 @@ void ui_task(void *arg) {
         TickType_t  mTime = xTaskGetTickCount();
         if(lasNumMed!=i_medPending){
             if (i_medPending == 0){
-                ui_textarea_add("         No News\n", "N", 0);
+                ui_textarea_add("                                    \n", "N", 0);
                 stopLedNotification();
                 bAlertDueTime = false;
             }else{

@@ -78,7 +78,8 @@ void initialise_wifi(void){
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = CONFIG_WIFI_SSID,
+            //.ssid = CONFIG_WIFI_SSID,
+            .ssid = "bencab-gl",
             .password = CONFIG_WIFI_PASSWORD,
         },
     };

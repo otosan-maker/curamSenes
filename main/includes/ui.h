@@ -30,6 +30,7 @@
 void ui_textarea_add(char *txt, char *param, size_t paramLen);
 void ui_wifi_label_update(bool state);
 void ui_mqtt_label_update(bool state);
+void ui_beacon_label_update(bool state);
 bool isPulsed();
 void releaseMedText();
 void ui_init();

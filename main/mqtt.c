@@ -42,8 +42,10 @@
 
 bool bSendMQTT = false;
 bool bSendMQTTMedicationEmpty = false;
+bool bSendMQTTBeaconLost = false;
 char cPayload[128];
 char cPayloadMedicationEmpty[128];
+char *cPayloadBeaconLost="{msg:\"lost beacon contact\"}";
 
 /* The time between each MQTT message publish in milliseconds */
 #define PUBLISH_INTERVAL_MS 6000
@@ -151,6 +153,14 @@ static void publishEmpty(AWS_IoT_Client *client, char *base_topic){
     publish(client, base_topic,cPayloadMedicationEmpty);
     bSendMQTTMedicationEmpty=false;
 }
+
+
+static void publisBeaconLost(AWS_IoT_Client *client, char *base_topic){
+    publish(client, base_topic,cPayloadBeaconLost);
+    bSendMQTTBeaconLost=false;
+}
+
+
 
 
 
@@ -270,6 +280,12 @@ void aws_iot_task(void *param) {
             sprintf(base_publish_topic,  "%s/rtn", client_id);
             publishEmpty(&client, base_publish_topic);
         }
+        if(bSendMQTTBeaconLost){
+            sprintf(base_publish_topic,  "%s/beacon", client_id);
+            publisBeaconLost(&client, base_publish_topic);
+        }
+        
+
     }
 
     ESP_LOGE(TAG, "An error occurred in the main loop.");

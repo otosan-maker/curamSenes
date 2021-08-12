@@ -37,6 +37,9 @@ extern bool bSendMQTT ;
 extern char cPayload[128];
 extern bool bSendMQTTMedicationEmpty ;
 extern char cPayloadMedicationEmpty[128];
+extern bool bSendMQTTBeaconLost;
+extern char *cPayloadBeaconLost;
+
 void deleteFromMed(int  idToDelete);
 void stopLedNotification();
 void cs_task(void *arg); 
@@ -48,5 +51,4 @@ void speakMe_task(void *arg);
 
 
 //bluetooth Scan Function
-extern QueueHandle_t qBlueScanQueue;
 void blueScan_task(void *arg);
