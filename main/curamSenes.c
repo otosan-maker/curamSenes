@@ -122,6 +122,8 @@ void csMedicationClear(){
 
 
 void deleteFromMed(int  idToDelete){
+    sprintf(cPayloadMedicationEmpty,"{\"id_dsm\":[%d],\"status\":2}",medPending[idToDelete].id_dsm);
+    bSendMQTTMedicationEmpty=true;
     for(int j=idToDelete;j<i_medPending-1;j++){
         strcpy (medPending[j].m_name    , medPending[j+1].m_name );
                 medPending[j].id_dsm    = medPending[j+1].id_dsm;

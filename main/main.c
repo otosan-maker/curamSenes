@@ -68,7 +68,7 @@ void app_main()
 {
     Core2ForAWS_Init();
     Core2ForAWS_Display_SetBrightness(80);
-    xTaskCreatePinnedToCore(&ui_task, "ui_task", 4096 * 1, NULL, 2, &uiHandle, tskNO_AFFINITY);
+    xTaskCreatePinnedToCore(&ui_task, "ui_task", 4096 , NULL, 2, &uiHandle, tskNO_AFFINITY);
     
     
     Core2ForAWS_Sk6812_Clear();
@@ -79,12 +79,12 @@ void app_main()
     qCSQueue = xQueueCreate( 5, 128 );
     qSoundQueue = xQueueCreate( 1, 64 );
 
-    xTaskCreatePinnedToCore(&aws_iot_task, "aws_iot_task",  4096 * 1, NULL, 2, &IoTHandle, 1);
-    xTaskCreatePinnedToCore(&blink_task, "blink_task",      1596 * 1, NULL, 2, &xBlink, tskNO_AFFINITY);
-    xTaskCreatePinnedToCore(&cs_task,       "cs_task",      3396 * 1, NULL, 2, &csHandle, tskNO_AFFINITY);
-    xTaskCreatePinnedToCore(&speakMe_task, "speakMe_task",  3096 * 1, NULL, 2,  &speakHandle, 1);
+    xTaskCreatePinnedToCore(&aws_iot_task, "aws_iot_task",  4096 , NULL, 2, &IoTHandle, 1);
+    xTaskCreatePinnedToCore(&blink_task, "blink_task",      1596 , NULL, 2, &xBlink, tskNO_AFFINITY);
+    xTaskCreatePinnedToCore(&cs_task,       "cs_task",      3396 , NULL, 2, &csHandle, tskNO_AFFINITY);
+    xTaskCreatePinnedToCore(&speakMe_task, "speakMe_task",  3096 , NULL, 2,  &speakHandle, 1);
 
-    xTaskCreatePinnedToCore(&blueScan_task, "blueScan_task", 3096 * 1, NULL, 2, &btScanHandle, tskNO_AFFINITY);
+    xTaskCreatePinnedToCore(&blueScan_task, "blueScan_task", 3096 , NULL, 2, &btScanHandle, tskNO_AFFINITY);
 
     while(true){
         //control memory use
