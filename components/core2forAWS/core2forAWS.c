@@ -21,6 +21,8 @@
 #define DEFAULT_VREF    1100
 static esp_adc_cal_characteristics_t *adc_characterization;
 
+TaskHandle_t guiHandle;
+
 #define ADC_CHANNEL ADC1_CHANNEL_0
 #define ADC_WIDTH ADC_WIDTH_BIT_12
 #define ADC_ATTENUATION ADC_ATTEN_DB_11
@@ -327,7 +329,7 @@ void Core2ForAWS_Display_Init(void) {
 
     xSemaphoreGive(xGuiSemaphore);
 
-    xTaskCreatePinnedToCore(guiTask, "gui", 4096*2, NULL, 2, NULL, 1);
+    xTaskCreatePinnedToCore(guiTask, "gui", 3596, NULL, 2, &guiHandle, 1);
 }
 
 void Core2ForAWS_Display_SetBrightness(uint8_t brightness) {

@@ -52,3 +52,8 @@ void speakMe_task(void *arg);
 
 //bluetooth Scan Function
 void blueScan_task(void *arg);
+
+//heart scant 
+void heartTestRequest(char * jsonMSG);
+void launch_heart_test(int id_test);
+void heart_task(void* param);

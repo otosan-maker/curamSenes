@@ -183,3 +183,35 @@ void cs_task(void *arg) {
 
 
 
+
+
+// hear bpm functions
+
+int testHeartJSONParse(char *szBuffer){
+    int id_test=0;
+
+    ESP_LOGI(TAG, "%s", (char*)szBuffer );
+    jparse_ctx_t myCTX;
+
+    if (json_parse_start(&myCTX, szBuffer, strlen(szBuffer)) != 0) {
+        ESP_LOGI(TAG, "JSON PARSER ERROR.");
+    }else{
+       int val_size = 0;
+       if (json_obj_get_strlen(&myCTX, "id_test", &val_size) == 0) {
+           
+            json_obj_get_int(&myCTX,  "id_test", &id_test);
+            ESP_LOGI(TAG, "id_test vale ... :%d",id_test);
+        }
+    }
+    return id_test;
+}
+
+
+
+void heartTestRequest(char * jsonMSG){
+
+    int id_test = testHeartJSONParse(jsonMSG);
+    launch_heart_test( id_test);
+}
+
+

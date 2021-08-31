@@ -43,9 +43,14 @@
 bool bSendMQTT = false;
 bool bSendMQTTMedicationEmpty = false;
 bool bSendMQTTBeaconLost = false;
+bool bSendMQTTHeartTest = false;
 char cPayload[128];
 char cPayloadMedicationEmpty[128];
+char cPayloadHeartTest[128];
 char *cPayloadBeaconLost="{msg:\"lost beacon contact\"}";
+
+
+extern bool heartTaskRuning;
 
 /* The time between each MQTT message publish in milliseconds */
 #define PUBLISH_INTERVAL_MS 6000
@@ -72,6 +77,7 @@ uint32_t port = AWS_IOT_MQTT_PORT;
 
 void iot_subscribe_callback_handler(AWS_IoT_Client *pClient, char *topicName, uint16_t topicNameLen,
                                     IoT_Publish_Message_Params *params, void *pData) {
+    char szMedBuff[129];
     ESP_LOGI(TAG, "Subscribe callback");
     ESP_LOGI(TAG, "%.*s\t%.*s", topicNameLen, topicName, (int) params->payloadLen, (char *)params->payload);
     if (strstr(topicName, "/blink") != NULL) {
@@ -85,12 +91,26 @@ void iot_subscribe_callback_handler(AWS_IoT_Client *pClient, char *topicName, ui
         }
     }
     if (strstr(topicName, "/medication") != NULL) {
-        char szMedBuff[129];
         // We receive a new medication notification
         sprintf(szMedBuff,"%.*s\n",(int) params->payloadLen,(char *)params->payload);
         xQueueSend( qCSQueue, ( void * ) &szMedBuff, ( TickType_t ) 1000 );
         ESP_LOGI(TAG, "Medication sent");
     }
+    if (strstr(topicName, "/med_appointment") != NULL) {
+        // We receive a new medication appointment
+        sprintf(szMedBuff,"%.*s\n",(int) params->payloadLen,(char *)params->payload);
+        //xQueueSend( qCSQueue, ( void * ) &szMedBuff, ( TickType_t ) 1000 );
+        ESP_LOGI(TAG, "Medication appointment");
+    }if (strstr(topicName, "/med_test") != NULL) {
+        
+        // We receive a new medication test request
+        sprintf(szMedBuff,"%.*s\n",(int) params->payloadLen,(char *)params->payload);
+        //launch test task only if it is not running, discard otherwise
+        if(heartTaskRuning==false)
+            heartTestRequest(szMedBuff);
+        ESP_LOGI(TAG, "Medication test request");
+    }
+
 }
 
 void disconnect_callback_handler(AWS_IoT_Client *pClient, void *data) {

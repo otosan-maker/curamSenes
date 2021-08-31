@@ -58,11 +58,18 @@ TaskHandle_t uiHandle;
 TaskHandle_t IoTHandle;
 TaskHandle_t speakHandle;
 TaskHandle_t btScanHandle;
+TaskHandle_t HeartHandle;
 
 extern TaskHandle_t xBlink;
+extern TaskHandle_t guiHandle;
+extern bool heartTaskRuning ;
 
 static const char *TAG = "MAINLOOP";
 
+
+void launch_heart_test(int id_test){
+    xTaskCreatePinnedToCore(&heart_task,    "heart_task",    3192, (void *) id_test, 2, &HeartHandle, tskNO_AFFINITY);
+}
 
 void app_main()
 {
@@ -85,7 +92,7 @@ void app_main()
     xTaskCreatePinnedToCore(&speakMe_task, "speakMe_task",  3096 , NULL, 2,  &speakHandle, 1);
 
     xTaskCreatePinnedToCore(&blueScan_task, "blueScan_task", 3096 , NULL, 2, &btScanHandle, tskNO_AFFINITY);
-
+    //xTaskCreatePinnedToCore(&heart_task,    "heart_task",    3192,  NULL, 2, &HeartHandle, tskNO_AFFINITY);
     while(true){
         //control memory use
         vTaskDelay(pdMS_TO_TICKS(15000));
@@ -96,6 +103,8 @@ void app_main()
         ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","cs_task      ",uxTaskGetStackHighWaterMark(csHandle) );
         ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","speakMe_task ",uxTaskGetStackHighWaterMark(speakHandle) );
         ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","blueScan_task",uxTaskGetStackHighWaterMark(btScanHandle) );
-        
+        // if (heartTaskRuning==true)
+        //     ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","heart_task   ",uxTaskGetStackHighWaterMark(HeartHandle) );
+        ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","gui_task     ",uxTaskGetStackHighWaterMark(guiHandle) );
     }
 }
