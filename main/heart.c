@@ -31,13 +31,14 @@
 #include "max30100.h"
 
 static const char *TAG = "HEART";
-bool heartTaskRuning = true;
+bool heartTaskRuning = false;
 float fBPM =0.0;
 float fSatO2 = 0.0;
 
 extern TaskHandle_t HeartHandle;
 extern bool bSendMQTTHeartTest ;
 extern char cPayloadHeartTest[128];
+extern int id_ths;
 
 #define I2C_SDA 32
 #define I2C_SCL 33
@@ -60,8 +61,9 @@ esp_err_t i2c_master_init(i2c_port_t i2c_port){
 
 void heart_task(void* param) {
     heartTaskRuning = true;
-    int id_test=(int)param;
-    ESP_LOGI(TAG,"MAX30100 id_test : %d",id_test);
+    vTaskDelay(pdMS_TO_TICKS(10000));
+
+    ESP_LOGI(TAG,"MAX30100 id_test : %d",id_ths);
     ESP_ERROR_CHECK(i2c_master_init(I2C_PORT));
     //Init sensor at I2C_NUM_0
     if(max30100_init( &max30100, I2C_PORT,
@@ -79,23 +81,29 @@ void heart_task(void* param) {
                         vTaskDelete(HeartHandle);
                    }
     max30100_data_t result = {};
-    for(int j=0;j<5;j++) {
+    int idata=0;
+    while(true) {
         //Update sensor, saving to "result"
         ESP_ERROR_CHECK(max30100_update(&max30100, &result));
         if(result.pulse_detected) {
             fBPM    += result.heart_bpm;
             fSatO2  += result.spO2 ;
-            ESP_LOGI(TAG,"BPM: %f | SpO2: %f%%\n", result.heart_bpm, result.spO2);
+            idata++;
+            ESP_LOGI(TAG,"BPM: %f | SpO2: %f%%", result.heart_bpm, result.spO2);
+            if(idata>1)
+                break;
         }
         //Update rate: 100Hz
         vTaskDelay(10/portTICK_PERIOD_MS);
     }
-    ESP_LOGI(TAG,"MEDIA");
-    ESP_LOGI(TAG,"BPM: %.02f | SpO2: %.02f %%\n", fBPM/5, fSatO2/5);
+    ESP_LOGI(TAG,"MEDIA idata:%d",idata);
+    ESP_LOGI(TAG,"BPM: %.02f | SpO2: %.02f %%\n", fBPM/idata, fSatO2/idata);
 
     //send message to test backoffice function
-    sprintf(cPayloadHeartTest,"{\"id_test\":%d,\"bpm\":%.02f,\"spo2\":%.02f}", id_test, fBPM/5, fSatO2/5 );
+    sprintf(cPayloadHeartTest,"{\"id_ths\":%d,\"bpm\":%.02f,\"spo2\":%.02f}", id_ths, fBPM/idata, fSatO2/idata );
+    ESP_LOGI(TAG,"Mandamos este mensaje %s",cPayloadHeartTest);
     bSendMQTTHeartTest=true;
+    heartTaskRuning = false;
     vTaskDelete(HeartHandle);
 }
 

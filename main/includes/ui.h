@@ -33,5 +33,7 @@ void ui_mqtt_label_update(bool state);
 void ui_beacon_label_update(bool state);
 bool isPulsed();
 void releaseMedText();
+void hideMedText();
+void showMedText();
 void ui_init();
 void ui_task(void *arg);

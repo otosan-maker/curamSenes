@@ -47,17 +47,6 @@ extern bool bAlertDueTime;
 
 static char *TAG = "UI";
 
-static void ui_textarea_prune(size_t new_text_length){
-    const char * current_text = lv_textarea_get_text(out_txtarea);
-    size_t current_text_len = strlen(current_text);
-    if(current_text_len + new_text_length >= MAX_TEXTAREA_LENGTH){
-        for(int i = 0; i < new_text_length; i++){
-            lv_textarea_set_cursor_pos(out_txtarea, 0);
-            lv_textarea_del_char_forward(out_txtarea);
-        }
-        lv_textarea_set_cursor_pos(out_txtarea, LV_TEXTAREA_CURSOR_LAST);
-    }
-}
 
 
 
@@ -65,17 +54,7 @@ static void ui_textarea_prune(size_t new_text_length){
 void ui_textarea_add(char *baseTxt, char *param, size_t paramLen) {
     if( baseTxt != NULL ){
         xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
-        if (param != NULL && paramLen != 0){
-            size_t baseTxtLen = strlen(baseTxt);
-            ui_textarea_prune(paramLen);
-            size_t bufLen = baseTxtLen + paramLen;
-            char buf[(int) bufLen];
-            sprintf(buf, baseTxt, param);
-            lv_textarea_add_text(out_txtarea, buf);
-        } 
-        else{
-            lv_textarea_set_text(out_txtarea, baseTxt); 
-        }
+        lv_textarea_set_text(out_txtarea, baseTxt); 
         xSemaphoreGive(xGuiSemaphore);
     } 
     else{
@@ -129,17 +108,35 @@ void ui_beacon_label_update(bool state){
 
 
 bool isPulsed(){
-    if (lv_obj_get_state(out_txtarea,0) == LV_STATE_FOCUSED)
+    xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
+    lv_state_t lv_stt = lv_obj_get_state(out_txtarea,0);
+    xSemaphoreGive(xGuiSemaphore);
+
+    if (lv_stt == LV_STATE_FOCUSED)
         return true;
     else
         return false;
 }
 
 void releaseMedText(){
+    xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
     lv_obj_set_state(out_txtarea,LV_STATE_DEFAULT );
     //lv_obj_set_state(mqtt_label,LV_STATE_FOCUSED );
+    xSemaphoreGive(xGuiSemaphore);
 }
 
+void hideMedText(){
+    xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
+    lv_obj_set_hidden(out_txtarea,true );
+    //lv_obj_set_state(mqtt_label,LV_STATE_FOCUSED );
+    xSemaphoreGive(xGuiSemaphore);
+}
+void showMedText(){
+    xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
+    lv_obj_set_hidden(out_txtarea,false );
+    //lv_obj_set_state(mqtt_label,LV_STATE_FOCUSED );
+    xSemaphoreGive(xGuiSemaphore);
+}
 
 void ui_init() {
     xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);

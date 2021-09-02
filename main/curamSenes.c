@@ -196,12 +196,8 @@ int testHeartJSONParse(char *szBuffer){
     if (json_parse_start(&myCTX, szBuffer, strlen(szBuffer)) != 0) {
         ESP_LOGI(TAG, "JSON PARSER ERROR.");
     }else{
-       int val_size = 0;
-       if (json_obj_get_strlen(&myCTX, "id_test", &val_size) == 0) {
-           
-            json_obj_get_int(&myCTX,  "id_test", &id_test);
-            ESP_LOGI(TAG, "id_test vale ... :%d",id_test);
-        }
+        json_obj_get_int(&myCTX,  "id_ths", &id_test);
+        ESP_LOGI(TAG, "JSON PARSER id_ths vale ... :%d",id_test);
     }
     return id_test;
 }
@@ -209,9 +205,12 @@ int testHeartJSONParse(char *szBuffer){
 
 
 void heartTestRequest(char * jsonMSG){
-
+    ESP_LOGI(TAG, "heartTestRequest %s",jsonMSG);
     int id_test = testHeartJSONParse(jsonMSG);
+    ESP_LOGI(TAG, "heartTestRequest id_ths:%d",id_test);
+    hideMedText();
     launch_heart_test( id_test);
+    showMedText();
 }
 
 

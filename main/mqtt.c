@@ -102,13 +102,13 @@ void iot_subscribe_callback_handler(AWS_IoT_Client *pClient, char *topicName, ui
         //xQueueSend( qCSQueue, ( void * ) &szMedBuff, ( TickType_t ) 1000 );
         ESP_LOGI(TAG, "Medication appointment");
     }if (strstr(topicName, "/med_test") != NULL) {
-        
+        ESP_LOGI(TAG, "Medication test request");
         // We receive a new medication test request
         sprintf(szMedBuff,"%.*s\n",(int) params->payloadLen,(char *)params->payload);
         //launch test task only if it is not running, discard otherwise
         if(heartTaskRuning==false)
             heartTestRequest(szMedBuff);
-        ESP_LOGI(TAG, "Medication test request");
+        
     }
 
 }
@@ -180,6 +180,11 @@ static void publisBeaconLost(AWS_IoT_Client *client, char *base_topic){
     bSendMQTTBeaconLost=false;
 }
 
+
+static void publisHeartTestResult(AWS_IoT_Client *client, char *base_topic){
+    publish(client, base_topic,cPayloadHeartTest);
+    bSendMQTTHeartTest=false;
+}
 
 
 
@@ -304,7 +309,10 @@ void aws_iot_task(void *param) {
             sprintf(base_publish_topic,  "%s/beacon", client_id);
             publisBeaconLost(&client, base_publish_topic);
         }
-        
+        if(bSendMQTTHeartTest){
+            sprintf(base_publish_topic,  "%s/test_heart_rtn", client_id);
+            publisHeartTestResult(&client, base_publish_topic);
+        }
 
     }
 
