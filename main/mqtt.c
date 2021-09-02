@@ -183,6 +183,9 @@ static void publisBeaconLost(AWS_IoT_Client *client, char *base_topic){
 
 static void publisHeartTestResult(AWS_IoT_Client *client, char *base_topic){
     publish(client, base_topic,cPayloadHeartTest);
+    //remove the botton from list
+    setHeartButton(false);
+
     bSendMQTTHeartTest=false;
 }
 

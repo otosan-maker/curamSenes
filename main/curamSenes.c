@@ -207,10 +207,12 @@ int testHeartJSONParse(char *szBuffer){
 void heartTestRequest(char * jsonMSG){
     ESP_LOGI(TAG, "heartTestRequest %s",jsonMSG);
     int id_test = testHeartJSONParse(jsonMSG);
-    ESP_LOGI(TAG, "heartTestRequest id_ths:%d",id_test);
-    hideMedText();
+
+    //start the button that shows the data
+    setHeartButton(true);
+
+    //start the task
     launch_heart_test( id_test);
-    showMedText();
 }
 
 

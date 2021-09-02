@@ -43,22 +43,85 @@ static lv_obj_t *out_txtarea;
 static lv_obj_t *wifi_label;
 static lv_obj_t *mqtt_label;
 static lv_obj_t *beacon_label;
+
+lv_obj_t *heart_button=NULL;
+lv_obj_t *med_appointment_button=NULL;
+
 extern bool bAlertDueTime; 
 
 static char *TAG = "UI";
 
+extern bool heartTaskRuning;
 
-
-
-
-void ui_textarea_add(char *baseTxt, char *param, size_t paramLen) {
-    if( baseTxt != NULL ){
+static void empty_event_handler(lv_obj_t * obj, lv_event_t event)
+{
+    if(event == LV_EVENT_CLICKED) {
         xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
-        lv_textarea_set_text(out_txtarea, baseTxt); 
+        ESP_LOGE(TAG, "Clicked EMPTY handler: %s\n", lv_list_get_btn_text(obj));
         xSemaphoreGive(xGuiSemaphore);
-    } 
-    else{
-        ESP_LOGE(TAG, "Textarea baseTxt is NULL!");
+    }
+}
+
+
+static void med_event_handler(lv_obj_t * obj, lv_event_t event)
+{
+    if(event == LV_EVENT_CLICKED) {
+        xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
+        ESP_LOGE(TAG, "Clicked med event handler: %s", lv_list_get_btn_text(obj));
+        xSemaphoreGive(xGuiSemaphore);
+    }
+}
+
+
+static void medApp_event_handler(lv_obj_t * obj, lv_event_t event)
+{
+    if(event == LV_EVENT_CLICKED) {
+        xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
+        ESP_LOGE(TAG, "Clicked med appointment event handler: %s", lv_list_get_btn_text(obj));
+        xSemaphoreGive(xGuiSemaphore);
+    }
+}
+
+
+static void heart_event_handler(lv_obj_t * obj, lv_event_t event)
+{
+    if(event == LV_EVENT_CLICKED) {
+        xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
+        ESP_LOGE(TAG, "Clicked heart event handler: %s", lv_list_get_btn_text(obj));
+        xSemaphoreGive(xGuiSemaphore);
+    }
+}
+
+char szHeartLabel[64];
+void setHeartButton(bool state){
+    ESP_LOGE(TAG, "setHeartButton ");
+    xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
+    if ((heart_button==NULL) && (state==true)){
+        ESP_LOGE(TAG, "((heart_button==NULL) && (state==true)) ");
+        strcpy(szHeartLabel,"HEART READING");
+        heart_button= lv_list_add_btn(out_txtarea, LV_SYMBOL_AUDIO,szHeartLabel );
+        lv_obj_set_event_cb(heart_button, heart_event_handler);
+    }
+
+    if( (heart_button!=NULL) &&(state==false)){
+        ESP_LOGE(TAG, "((state==false)) ");
+        lv_list_remove(out_txtarea,lv_list_get_btn_index(out_txtarea, heart_button));
+        heart_button=NULL;
+    }
+    xSemaphoreGive(xGuiSemaphore);
+}
+
+
+void setMsgHeartButton(float bpm ,float spo2){
+    ESP_LOGE(TAG, "setMsgHeartButton ");
+    if (heart_button!=NULL){
+        sprintf(szHeartLabel,"BPM: %.02f SPO2: %.02f %%",bpm,spo2);
+        ESP_LOGE(TAG, "bpm: %s  ",szHeartLabel);
+        xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
+        lv_obj_t * label;
+        label = lv_label_create(heart_button, NULL);
+        lv_label_set_text(label, szHeartLabel );
+        xSemaphoreGive(xGuiSemaphore);
     }
 }
 
@@ -96,11 +159,11 @@ void ui_mqtt_label_update(bool state){
 void ui_beacon_label_update(bool state){
     xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
     if (state == false) {
-        lv_label_set_text(beacon_label, "BT");
+        lv_label_set_text(beacon_label, LV_SYMBOL_BLUETOOTH);
     } 
     else{
         char buffer[25];
-        sprintf (buffer, "#0000ff %s #", "BT");
+        sprintf (buffer, "#0000ff %s #", LV_SYMBOL_BLUETOOTH);
         lv_label_set_text(beacon_label, buffer);
     }
     xSemaphoreGive(xGuiSemaphore);
@@ -125,18 +188,7 @@ void releaseMedText(){
     xSemaphoreGive(xGuiSemaphore);
 }
 
-void hideMedText(){
-    xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
-    lv_obj_set_hidden(out_txtarea,true );
-    //lv_obj_set_state(mqtt_label,LV_STATE_FOCUSED );
-    xSemaphoreGive(xGuiSemaphore);
-}
-void showMedText(){
-    xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
-    lv_obj_set_hidden(out_txtarea,false );
-    //lv_obj_set_state(mqtt_label,LV_STATE_FOCUSED );
-    xSemaphoreGive(xGuiSemaphore);
-}
+
 
 void ui_init() {
     xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
@@ -153,55 +205,76 @@ void ui_init() {
     beacon_label= lv_label_create(lv_scr_act(), NULL);
     //lv_obj_align(beacon_label,NULL,LV_ALIGN_IN_TOP_CENTER, 0, 6);
     lv_obj_set_pos(beacon_label, 150, 5);	 
-    lv_label_set_text(beacon_label, "bt");
+    lv_label_set_text(beacon_label, LV_SYMBOL_BLUETOOTH  );
     lv_label_set_recolor(beacon_label, true);
 
 
-    out_txtarea = lv_textarea_create(lv_scr_act(), NULL);
+    
+    out_txtarea = lv_list_create(lv_scr_act(), NULL);
     lv_obj_set_size(out_txtarea, 300, 190);
     lv_obj_align(out_txtarea, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -12);
-    lv_textarea_set_max_length(out_txtarea, MAX_TEXTAREA_LENGTH);
-    lv_textarea_set_text_sel(out_txtarea, false);
-    lv_textarea_set_cursor_hidden(out_txtarea, true);
-    lv_textarea_set_text(out_txtarea, "    Startup   \n");
+    
     
     xSemaphoreGive(xGuiSemaphore);
 }
 
+
+void drawBox(){
+    lv_obj_t * list_btn;
+    xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
+    TickType_t  mTime = xTaskGetTickCount();
+    //delete medical bottons
+    lv_list_clean(out_txtarea);
+    for(int j=0;j<lv_list_get_size(out_txtarea);j++){
+
+    }
+    if (i_medPending == 0)    {
+        list_btn = lv_list_add_btn(out_txtarea, LV_SYMBOL_FILE, "M    EMPTY");
+        lv_obj_set_event_cb(list_btn, empty_event_handler);
+        stopLedNotification();
+        bAlertDueTime = false; //Revisar
+    }
+    else    {
+        char sztmp[112];
+        strcpy(sztmp, "M ");
+        for (int i = 0; i < i_medPending; i++)        {
+            strcat(sztmp, medPending[i].m_name);
+            //mark past DUE
+            if ((mTime - medPending[i].timestamp) > PAST_DUE_TIME)
+            {
+                strcat(sztmp, "   .....  PAST DUE ");
+            }
+            list_btn = lv_list_add_btn(out_txtarea, LV_SYMBOL_UPLOAD, sztmp);
+            lv_obj_set_event_cb(list_btn, med_event_handler);
+        }
+    }
+    //if heart task is running
+    if(heartTaskRuning == true){
+        heart_button= lv_list_add_btn(out_txtarea, LV_SYMBOL_AUDIO,szHeartLabel );
+        lv_obj_set_event_cb(heart_button, heart_event_handler);
+    }
+    
+
+    xSemaphoreGive(xGuiSemaphore);
+}
 
 
 void ui_task(void *arg) {
     
     ui_init();
     int lasNumMed=-1;
+    
 
 
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(1000));
-        TickType_t  mTime = xTaskGetTickCount();
+        
+        //any change in the number of medicines ...
         if(lasNumMed!=i_medPending){
-            if (i_medPending == 0){
-                ui_textarea_add("                                    \n", "N", 0);
-                stopLedNotification();
-                bAlertDueTime = false;
-            }else{
-                char sztmp[1024];
-                strcpy(sztmp,"         MEDICATION PENDING\n\n");
-                for(int i=0;i<i_medPending;i++){
-                    
-                    //ESP_LOGI(TAG, " %u Medic %s ",i,medPending[i].m_name);
-                    strcat(sztmp," * ");
-                    strcat(sztmp,medPending[i].m_name);
-                    //mark past DUE 
-                    if ((mTime  - medPending[i].timestamp) > PAST_DUE_TIME){
-                        strcat(sztmp,"   .....  PAST DUE ");
-                    }
-                    strcat(sztmp,"\n");
-                }
-                ui_textarea_add( sztmp , NULL, 0);
-            }
+            drawBox();
             lasNumMed=i_medPending;
         }
+        
 
     }
     // Should never get here. FreeRTOS tasks loop forever.

@@ -30,6 +30,8 @@
 
 #include "max30100.h"
 
+#include "ui.h"
+
 static const char *TAG = "HEART";
 bool heartTaskRuning = false;
 float fBPM =0.0;
@@ -90,6 +92,8 @@ void heart_task(void* param) {
             fSatO2  += result.spO2 ;
             idata++;
             ESP_LOGI(TAG,"BPM: %f | SpO2: %f%%", result.heart_bpm, result.spO2);
+            // problems in the GUI ... REVISAR
+            setMsgHeartButton(result.heart_bpm ,result.spO2);
             if(idata>1)
                 break;
         }
