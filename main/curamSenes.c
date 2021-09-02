@@ -121,8 +121,12 @@ void csMedicationClear(){
 }
 
 
-void deleteFromMed(int  idToDelete){
-    sprintf(cPayloadMedicationEmpty,"{\"id_dsm\":[%d],\"status\":2}",medPending[idToDelete].id_dsm);
+
+void deleteFromMed_arc(int  idToDelete,int state){
+    //this is good for a small implantation, but it is necesary to implement a queue
+    if (bSendMQTTMedicationEmpty==true) // other msg is in the 'queue' , sleep a bit 
+        vTaskDelay(pdMS_TO_TICKS(700));
+    sprintf(cPayloadMedicationEmpty,"{\"id_dsm\":[%d],\"status\":%d}",medPending[idToDelete].id_dsm,state);
     bSendMQTTMedicationEmpty=true;
     for(int j=idToDelete;j<i_medPending-1;j++){
         strcpy (medPending[j].m_name    , medPending[j+1].m_name );
@@ -132,6 +136,15 @@ void deleteFromMed(int  idToDelete){
     i_medPending--;
 }
 
+// medicament out for timeout
+void deleteFromMed(int  idToDelete){
+     deleteFromMed_arc(idToDelete,2);
+}
+
+// medicament out for acknowladge from patient
+void clickedFromMed(int  idToDelete){
+     deleteFromMed_arc(idToDelete,1);
+}
 
 
 void cs_task(void *arg) {  

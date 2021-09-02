@@ -41,6 +41,7 @@ extern bool bSendMQTTBeaconLost;
 extern char *cPayloadBeaconLost;
 
 void deleteFromMed(int  idToDelete);
+void clickedFromMed(int  idToDelete);
 void stopLedNotification();
 void cs_task(void *arg); 
 
