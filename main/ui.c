@@ -84,7 +84,28 @@ void ui_textarea_add(char *baseTxt, char *param, size_t paramLen) {
 }
 
 
+static void med_event_handler(lv_obj_t * obj, lv_event_t event)
+{
+    if(event == LV_EVENT_CLICKED) {
+        ESP_LOGE(TAG, "Clicked med event handler: %s\n", lv_list_get_btn_text(obj));
+    }
+}
 
+
+static void medApp_event_handler(lv_obj_t * obj, lv_event_t event)
+{
+    if(event == LV_EVENT_CLICKED) {
+        ESP_LOGE(TAG, "Clicked med appointment event handler: %s\n", lv_list_get_btn_text(obj));
+    }
+}
+
+
+static void heart_event_handler(lv_obj_t * obj, lv_event_t event)
+{
+    if(event == LV_EVENT_CLICKED) {
+        ESP_LOGE(TAG, "Clicked heart event handler: %s\n", lv_list_get_btn_text(obj));
+    }
+}
 
 
 void ui_wifi_label_update(bool state){
@@ -160,14 +181,16 @@ void ui_init() {
     lv_label_set_recolor(beacon_label, true);
 
 
-    out_txtarea = lv_textarea_create(lv_scr_act(), NULL);
+    //out_txtarea = lv_textarea_create(lv_scr_act(), NULL);
+    out_txtarea = lv_list_create(lv_scr_act(), NULL);
     lv_obj_set_size(out_txtarea, 300, 190);
     lv_obj_align(out_txtarea, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -12);
-    lv_textarea_set_max_length(out_txtarea, MAX_TEXTAREA_LENGTH);
-    lv_textarea_set_text_sel(out_txtarea, false);
-    lv_textarea_set_cursor_hidden(out_txtarea, true);
-    lv_textarea_set_text(out_txtarea, "    Startup   \n");
+    // lv_textarea_set_max_length(out_txtarea, MAX_TEXTAREA_LENGTH);
+    // lv_textarea_set_text_sel(out_txtarea, false);
+    // lv_textarea_set_cursor_hidden(out_txtarea, true);
+    // lv_textarea_set_text(out_txtarea, "    Startup   \n");
     
+
     xSemaphoreGive(xGuiSemaphore);
 }
 
@@ -182,26 +205,28 @@ void ui_task(void *arg) {
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(1000));
         TickType_t  mTime = xTaskGetTickCount();
+        lv_obj_t * list_btn;
+
         if(lasNumMed!=i_medPending){
             if (i_medPending == 0){
-                ui_textarea_add("                                    \n", "N", 0);
+                list_btn = lv_list_add_btn(out_txtarea, NULL, "EMPTY");
+                lv_obj_set_event_cb(list_btn, med_event_handler);
                 stopLedNotification();
-                bAlertDueTime = false;
+                bAlertDueTime = false;  //REVISAR
             }else{
-                char sztmp[1024];
-                strcpy(sztmp,"         MEDICATION PENDING\n\n");
+                
                 for(int i=0;i<i_medPending;i++){
-                    
+                    char sztmp[120];
                     //ESP_LOGI(TAG, " %u Medic %s ",i,medPending[i].m_name);
                     strcat(sztmp," * ");
                     strcat(sztmp,medPending[i].m_name);
                     //mark past DUE 
                     if ((mTime  - medPending[i].timestamp) > PAST_DUE_TIME){
-                        strcat(sztmp,"   .....  PAST DUE ");
+                        strcat(sztmp,"   ..  PAST DUE ");
                     }
-                    strcat(sztmp,"\n");
+                    list_btn = lv_list_add_btn(out_txtarea, NULL, sztmp);
+                    lv_obj_set_event_cb(list_btn, med_event_handler);
                 }
-                ui_textarea_add( sztmp , NULL, 0);
             }
             lasNumMed=i_medPending;
         }
