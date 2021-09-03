@@ -25,6 +25,7 @@ struct medic {
     char        m_name[64];
     int         id_dsm;
     TickType_t  timestamp;
+    lv_obj_t *  btn;
 };
 
 #define MAX_MED 10

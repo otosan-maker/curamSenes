@@ -17,6 +17,7 @@
 #include "esp_bt.h" 
 #include "esp_err.h"
 
+#include "core2forAWS.h"
 #include "ui.h"
 #include "curamSenes.h"
 

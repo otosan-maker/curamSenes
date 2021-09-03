@@ -46,6 +46,7 @@ static lv_obj_t *beacon_label;
 
 lv_obj_t *heart_button=NULL;
 lv_obj_t *med_appointment_button=NULL;
+lv_obj_t *empty_button=NULL;
 
 extern bool bAlertDueTime; 
 
@@ -116,7 +117,7 @@ void setMsgHeartButton(float bpm ,float spo2){
     ESP_LOGE(TAG, "setMsgHeartButton ");
     if (heart_button!=NULL){
         sprintf(szHeartLabel,"BPM: %.02f SPO2: %.02f %%",bpm,spo2);
-        ESP_LOGE(TAG, "bpm: %s  ",szHeartLabel);
+        ESP_LOGE(TAG, "setMsgHeartButton: %s  ",szHeartLabel);
         xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
         lv_obj_t * label;
         label = lv_label_create(heart_button, NULL);
@@ -124,6 +125,30 @@ void setMsgHeartButton(float bpm ,float spo2){
         xSemaphoreGive(xGuiSemaphore);
     }
 }
+
+
+
+
+
+char szMedAppLabel[64];
+void setMedAppButton(bool state){
+    ESP_LOGE(TAG, "setHeartButton ");
+    xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
+    if ((med_appointment_button==NULL) && (state==true)){
+        ESP_LOGE(TAG, "setMedAppButton: ((med_appointment_button==NULL) && (state==true)) ");
+        strcpy(szHeartLabel,"Medical Appointment");
+        med_appointment_button= lv_list_add_btn(out_txtarea, LV_SYMBOL_AUDIO,szHeartLabel );
+        lv_obj_set_event_cb(med_appointment_button, heart_event_handler);
+    }
+
+    if( (med_appointment_button!=NULL) &&(state==false)){
+        ESP_LOGE(TAG, "setMedAppButton: ((state==false)) ");
+        lv_list_remove(out_txtarea,lv_list_get_btn_index(out_txtarea, heart_button));
+        med_appointment_button=NULL;
+    }
+    xSemaphoreGive(xGuiSemaphore);
+}
+
 
 
 
@@ -219,24 +244,31 @@ void ui_init() {
 }
 
 
+void deleteMedButtons(){
+    for (int i = 0; i < i_medPending; i++)
+        lv_list_remove(out_txtarea,lv_list_get_btn_index(out_txtarea, medPending[i].btn)); 
+    }
+}
+
+
+
 void drawBox(){
     lv_obj_t * list_btn;
     xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
     TickType_t  mTime = xTaskGetTickCount();
     //delete medical bottons
-    lv_list_clean(out_txtarea);
-    for(int j=0;j<lv_list_get_size(out_txtarea);j++){
-
-    }
+    //lv_list_clean(out_txtarea);
+    deleteMedButtons();
     if (i_medPending == 0)    {
-        list_btn = lv_list_add_btn(out_txtarea, LV_SYMBOL_FILE, "M    EMPTY");
-        lv_obj_set_event_cb(list_btn, empty_event_handler);
+        //Let the screen empty for now
+        //list_btn = lv_list_add_btn(out_txtarea, LV_SYMBOL_FILE, "    EMPTY");
+        //lv_obj_set_event_cb(list_btn, empty_event_handler);
         stopLedNotification();
         bAlertDueTime = false; //Revisar
     }
     else    {
         char sztmp[112];
-        strcpy(sztmp, "M ");
+        strcpy(sztmp, "");
         for (int i = 0; i < i_medPending; i++)        {
             strcat(sztmp, medPending[i].m_name);
             //mark past DUE
@@ -246,6 +278,7 @@ void drawBox(){
             }
             list_btn = lv_list_add_btn(out_txtarea, LV_SYMBOL_UPLOAD, sztmp);
             lv_obj_set_event_cb(list_btn, med_event_handler);
+            medPending[i].btn=list_btn;
         }
     }
     //if heart task is running
