@@ -245,7 +245,7 @@ void ui_init() {
 
 
 void deleteMedButtons(){
-    for (int i = 0; i < i_medPending; i++)
+    for (int i = 0; i < i_medPending; i++){
         lv_list_remove(out_txtarea,lv_list_get_btn_index(out_txtarea, medPending[i].btn)); 
     }
 }
