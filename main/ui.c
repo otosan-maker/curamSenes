@@ -57,9 +57,7 @@ extern bool heartTaskRuning;
 static void empty_event_handler(lv_obj_t * obj, lv_event_t event)
 {
     if(event == LV_EVENT_CLICKED) {
-        xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
         ESP_LOGE(TAG, "Clicked EMPTY handler: %s\n", lv_list_get_btn_text(obj));
-        xSemaphoreGive(xGuiSemaphore);
     }
 }
 
@@ -67,9 +65,9 @@ static void empty_event_handler(lv_obj_t * obj, lv_event_t event)
 static void med_event_handler(lv_obj_t * obj, lv_event_t event)
 {
     if(event == LV_EVENT_CLICKED) {
-        xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
         ESP_LOGE(TAG, "Clicked med event handler: %s", lv_list_get_btn_text(obj));
-        xSemaphoreGive(xGuiSemaphore);
+        deleteFromStrMed(lv_list_get_btn_text(obj));
+
     }
 }
 
@@ -77,9 +75,8 @@ static void med_event_handler(lv_obj_t * obj, lv_event_t event)
 static void medApp_event_handler(lv_obj_t * obj, lv_event_t event)
 {
     if(event == LV_EVENT_CLICKED) {
-        xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
         ESP_LOGE(TAG, "Clicked med appointment event handler: %s", lv_list_get_btn_text(obj));
-        xSemaphoreGive(xGuiSemaphore);
+        //lv_list_remove(out_txtarea,lv_list_get_btn_index(out_txtarea, obj));
     }
 }
 
@@ -87,9 +84,8 @@ static void medApp_event_handler(lv_obj_t * obj, lv_event_t event)
 static void heart_event_handler(lv_obj_t * obj, lv_event_t event)
 {
     if(event == LV_EVENT_CLICKED) {
-        xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
         ESP_LOGE(TAG, "Clicked heart event handler: %s", lv_list_get_btn_text(obj));
-        xSemaphoreGive(xGuiSemaphore);
+        //lv_list_remove(out_txtarea,lv_list_get_btn_index(out_txtarea, obj));
     }
 }
 
@@ -100,7 +96,7 @@ void setHeartButton(bool state){
     if ((heart_button==NULL) && (state==true)){
         ESP_LOGE(TAG, "((heart_button==NULL) && (state==true)) ");
         strcpy(szHeartLabel,"HEART READING");
-        heart_button= lv_list_add_btn(out_txtarea, LV_SYMBOL_AUDIO,szHeartLabel );
+        heart_button= lv_list_add_btn(out_txtarea, LV_SYMBOL_CHARGE,szHeartLabel );
         lv_obj_set_event_cb(heart_button, heart_event_handler);
     }
 
@@ -131,19 +127,19 @@ void setMsgHeartButton(float bpm ,float spo2){
 
 
 char szMedAppLabel[64];
-void setMedAppButton(bool state){
+void setMedAppButton(bool state,char *szData){
     ESP_LOGE(TAG, "setHeartButton ");
     xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
     if ((med_appointment_button==NULL) && (state==true)){
         ESP_LOGE(TAG, "setMedAppButton: ((med_appointment_button==NULL) && (state==true)) ");
-        strcpy(szHeartLabel,"Medical Appointment");
-        med_appointment_button= lv_list_add_btn(out_txtarea, LV_SYMBOL_AUDIO,szHeartLabel );
+        strcpy(szHeartLabel,szData);
+        med_appointment_button= lv_list_add_btn(out_txtarea, LV_SYMBOL_HOME,szHeartLabel );
         lv_obj_set_event_cb(med_appointment_button, heart_event_handler);
     }
 
     if( (med_appointment_button!=NULL) &&(state==false)){
         ESP_LOGE(TAG, "setMedAppButton: ((state==false)) ");
-        lv_list_remove(out_txtarea,lv_list_get_btn_index(out_txtarea, heart_button));
+        lv_list_remove(out_txtarea,lv_list_get_btn_index(out_txtarea, med_appointment_button));
         med_appointment_button=NULL;
     }
     xSemaphoreGive(xGuiSemaphore);
@@ -244,71 +240,49 @@ void ui_init() {
 }
 
 
-void deleteMedButtons(){
-    for (int i = 0; i < i_medPending; i++){
-        lv_list_remove(out_txtarea,lv_list_get_btn_index(out_txtarea, medPending[i].btn)); 
-    }
-}
 
 
-
-void drawBox(){
+void drawBox(int oldMaxVal){
     lv_obj_t * list_btn;
+    ESP_LOGE(TAG, " drawBox :");
     xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
-    TickType_t  mTime = xTaskGetTickCount();
-    //delete medical bottons
-    //lv_list_clean(out_txtarea);
-    deleteMedButtons();
-    if (i_medPending == 0)    {
-        //Let the screen empty for now
-        //list_btn = lv_list_add_btn(out_txtarea, LV_SYMBOL_FILE, "    EMPTY");
-        //lv_obj_set_event_cb(list_btn, empty_event_handler);
+    
+    for (int i = 0; i < oldMaxVal; i++){
+         if(medPending[i].btn!=NULL){
+            ESP_LOGE(TAG, " drawBox : %p",medPending[i].btn);
+            lv_list_remove(out_txtarea,lv_list_get_btn_index(out_txtarea, medPending[i].btn));
+         }
+    }
+    if (i_medPending == 0) {
+        ESP_LOGE(TAG, " drawBox : No med");
         stopLedNotification();
         bAlertDueTime = false; //Revisar
     }
     else    {
         char sztmp[112];
-        strcpy(sztmp, "");
         for (int i = 0; i < i_medPending; i++)        {
-            strcat(sztmp, medPending[i].m_name);
-            //mark past DUE
-            if ((mTime - medPending[i].timestamp) > PAST_DUE_TIME)
-            {
-                strcat(sztmp, "   .....  PAST DUE ");
-            }
-            list_btn = lv_list_add_btn(out_txtarea, LV_SYMBOL_UPLOAD, sztmp);
+            strcpy(sztmp, medPending[i].m_name);            
+            list_btn = lv_list_add_btn(out_txtarea, LV_SYMBOL_BELL, sztmp);
             lv_obj_set_event_cb(list_btn, med_event_handler);
             medPending[i].btn=list_btn;
         }
     }
-    //if heart task is running
-    if(heartTaskRuning == true){
-        heart_button= lv_list_add_btn(out_txtarea, LV_SYMBOL_AUDIO,szHeartLabel );
-        lv_obj_set_event_cb(heart_button, heart_event_handler);
-    }
-    
-
     xSemaphoreGive(xGuiSemaphore);
 }
 
 
+
 void ui_task(void *arg) {
-    
     ui_init();
     int lasNumMed=-1;
-    
-
-
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(1000));
         
         //any change in the number of medicines ...
         if(lasNumMed!=i_medPending){
-            drawBox();
+            drawBox(lasNumMed);
             lasNumMed=i_medPending;
         }
-        
-
     }
     // Should never get here. FreeRTOS tasks loop forever.
     ESP_LOGE(TAG, "Error in UI task. Out of loop.");

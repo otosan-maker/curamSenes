@@ -35,6 +35,9 @@ void ui_beacon_label_update(bool state);
 void setHeartButton(bool state);
 void setMsgHeartButton(float bpm ,float spo2);
 
+
+void setMedAppButton(bool state,char *szData);
+
 bool isPulsed();
 void releaseMedText();
 void ui_init();

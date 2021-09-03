@@ -99,7 +99,7 @@ void iot_subscribe_callback_handler(AWS_IoT_Client *pClient, char *topicName, ui
     if (strstr(topicName, "/med_appointment") != NULL) {
         // We receive a new medication appointment
         sprintf(szMedBuff,"%.*s\n",(int) params->payloadLen,(char *)params->payload);
-        //xQueueSend( qCSQueue, ( void * ) &szMedBuff, ( TickType_t ) 1000 );
+        medicalAppRequest(szMedBuff);
         ESP_LOGI(TAG, "Medication appointment");
     }if (strstr(topicName, "/med_test") != NULL) {
         ESP_LOGI(TAG, "Medication test request");

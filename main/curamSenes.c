@@ -70,8 +70,10 @@ void csNewMedication(char *szBuffer){
             int iTmp;
             json_obj_get_int(&myCTX,  "id_dsm", &iTmp);
             medPending[i_medPending].id_dsm=iTmp;
+            ESP_LOGI(TAG, "id_dsm vale ... :%d",iTmp);
+            medPending[i_medPending].btn=NULL;
+            ESP_LOGI(TAG, "btn vale ... :%p",medPending[i_medPending].btn);
 
-            
             medPending[i_medPending].timestamp=xTaskGetTickCount();
             i_medPending++;
         }
@@ -115,6 +117,7 @@ void csMedicationClear(){
 
     sprintf(cPayloadMedicationEmpty,"{\"id_dsm\":[%s],\"status\":1}",szTmpVID);
     ESP_LOGI(TAG, "Empty medication: %s", cPayloadMedicationEmpty );
+    //
     i_medPending=0;
     bSendMQTTMedicationEmpty=true;
     releaseMedText();
@@ -128,10 +131,23 @@ void deleteFromMed(int  idToDelete){
         strcpy (medPending[j].m_name    , medPending[j+1].m_name );
                 medPending[j].id_dsm    = medPending[j+1].id_dsm;
                 medPending[j].timestamp = medPending[j+1].timestamp;
+                medPending[j].btn       = medPending[j+1].btn;
     }
+    medPending[i_medPending].btn=NULL;
     i_medPending--;
 }
 
+
+void deleteFromStrMed(char *  strMedication){
+    
+    for(int j=0;j<i_medPending;j++){
+        if(strcmp(medPending[j].m_name,strMedication)==0){
+            ESP_LOGI(TAG, "deleteFromStrMed: %s ::: %s",medPending[j].m_name ,strMedication );
+            deleteFromMed(j);
+        }
+        
+    }
+}
 
 
 void cs_task(void *arg) {  
@@ -186,7 +202,6 @@ void cs_task(void *arg) {
 
 
 // hear bpm functions
-
 int testHeartJSONParse(char *szBuffer){
     int id_test=0;
 
@@ -215,4 +230,39 @@ void heartTestRequest(char * jsonMSG){
     launch_heart_test( id_test);
 }
 
+
+// medical appoitment functions
+int medicalAppJSONParse(char *szBuffer,char *strMsg){
+    ESP_LOGI(TAG, "%s", (char*)szBuffer );
+    jparse_ctx_t myCTX;
+
+    if (json_parse_start(&myCTX, szBuffer, strlen(szBuffer)) != 0) {
+        ESP_LOGI(TAG, "JSON PARSER ERROR.");
+    }else{
+        int val_size = 0;
+        if (json_obj_get_strlen(&myCTX, "m_doctor", &val_size) == 0) {
+           val_size++; /* For NULL termination */
+           char *s = calloc(1, val_size);
+            if (!s) {
+               ESP_LOGI(TAG, "CALLOC ERROR.");
+            }
+    
+            json_obj_get_string(&myCTX,  "m_doctor", s, val_size);
+            strncpy(strMsg,s,64);
+            ESP_LOGI(TAG, "m_name vale ... :%s",s);
+            free(s);
+
+        }
+    }
+    return 0;
+}
+
+void medicalAppRequest(char * jsonMSG){
+    char strDoctorAppointment[64];
+    ESP_LOGI(TAG, "medicalAppRequest %s",jsonMSG);
+    int id_test = medicalAppJSONParse(jsonMSG,strDoctorAppointment);
+    ESP_LOGI(TAG, "medicalAppRequest %s",strDoctorAppointment);
+    //start the button that shows the data
+    setMedAppButton(true, strDoctorAppointment);
+}
 
