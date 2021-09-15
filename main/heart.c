@@ -66,7 +66,7 @@ void heart_task(void* param) {
     vTaskDelay(pdMS_TO_TICKS(10000));
 
     ESP_LOGI(TAG,"MAX30100 id_test : %d",id_ths);
-    ESP_ERROR_CHECK(i2c_master_init(I2C_PORT));
+    i2c_master_init(I2C_PORT);
     //Init sensor at I2C_NUM_0
     if(max30100_init( &max30100, I2C_PORT,
                    MAX30100_DEFAULT_OPERATING_MODE,
@@ -86,7 +86,10 @@ void heart_task(void* param) {
     int idata=0;
     while(true) {
         //Update sensor, saving to "result"
-        ESP_ERROR_CHECK(max30100_update(&max30100, &result));
+        if(max30100_update(&max30100, &result)){
+            vTaskDelay(10/portTICK_PERIOD_MS);
+            continue;
+        }   
         if(result.pulse_detected) {
             fBPM    += result.heart_bpm;
             fSatO2  += result.spO2 ;
