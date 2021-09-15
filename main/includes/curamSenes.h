@@ -29,7 +29,7 @@ struct medic {
 };
 
 #define MAX_MED 10
-#define PAST_DUE_TIME 1000 //600*100 //10 minutes
+#define PAST_DUE_TIME 60000 //600*100 //10 minutes
 
 extern QueueHandle_t qCSQueue;
 extern struct medic   medPending[MAX_MED];
@@ -42,6 +42,7 @@ extern bool bSendMQTTBeaconLost;
 extern char *cPayloadBeaconLost;
 
 void deleteFromMed(int  idToDelete);
+void deleteFromStrMed(char *  strMedication);
 void stopLedNotification();
 void cs_task(void *arg); 
 
@@ -58,3 +59,6 @@ void blueScan_task(void *arg);
 void heartTestRequest(char * jsonMSG);
 void launch_heart_test(int id_test);
 void heart_task(void* param);
+
+//Medical appointment
+void medicalAppRequest(char * jsonMSG);

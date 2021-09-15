@@ -97,15 +97,15 @@ void app_main()
     while(true){
         //control memory use
         vTaskDelay(pdMS_TO_TICKS(15000));
-        ESP_LOGI(TAG, " ##############################################################################."  );
-        ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","ui_task      ",uxTaskGetStackHighWaterMark(uiHandle) );
-        ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","aws_iot_task ",uxTaskGetStackHighWaterMark(IoTHandle) );
-        ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","blink_task   ",uxTaskGetStackHighWaterMark(xBlink) );
-        ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","cs_task      ",uxTaskGetStackHighWaterMark(csHandle) );
-        ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","speakMe_task ",uxTaskGetStackHighWaterMark(speakHandle) );
-        ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","blueScan_task",uxTaskGetStackHighWaterMark(btScanHandle) );
-         if (heartTaskRuning==true)
-             ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","heart_task   ",uxTaskGetStackHighWaterMark(HeartHandle) );
-        ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","gui_task     ",uxTaskGetStackHighWaterMark(guiHandle) );
+        // ESP_LOGI(TAG, " ##############################################################################."  );
+        // ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","ui_task      ",uxTaskGetStackHighWaterMark(uiHandle) );
+        // ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","aws_iot_task ",uxTaskGetStackHighWaterMark(IoTHandle) );
+        // ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","blink_task   ",uxTaskGetStackHighWaterMark(xBlink) );
+        // ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","cs_task      ",uxTaskGetStackHighWaterMark(csHandle) );
+        // ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","speakMe_task ",uxTaskGetStackHighWaterMark(speakHandle) );
+        // ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","blueScan_task",uxTaskGetStackHighWaterMark(btScanHandle) );
+        //  if (heartTaskRuning==true)
+        //      ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","heart_task   ",uxTaskGetStackHighWaterMark(HeartHandle) );
+        // ESP_LOGI(TAG, "MEMORY FREE %s:::%d.","gui_task     ",uxTaskGetStackHighWaterMark(guiHandle) );
     }
 }
